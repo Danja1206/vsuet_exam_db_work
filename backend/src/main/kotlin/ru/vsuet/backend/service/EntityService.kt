@@ -14,7 +14,9 @@ class EntityService(
     private val orderRepository: OrderRepository,
     private val customerRepository: CustomerRepository,
     private val categoryRepository: CategoryRepository,
-    private val orderItemRepository: OrderItemRepository
+    private val orderItemRepository: OrderItemRepository,
+    private val reviewRepository: ReviewRepository,
+    private val warehouseRepository: WarehouseRepository,
 ) {
 
     fun getAllSellers(): List<SellerDto> {
@@ -67,6 +69,18 @@ class EntityService(
 
     fun getAllCategories(): List<CategoryDto> =
         categoryRepository.findAll().map { entityToDto(it) }
+
+    fun getOrderItems() : List<OrderItemDto> =
+        orderItemRepository.findAll().map { entityToDto(it) }
+
+    fun getReviews() : List<ReviewDto> =
+        reviewRepository.findAll().map { entityToDto(it) }
+
+    fun getWarehouses() : List<WarehouseDto> =
+        warehouseRepository.findAll().map { entityToDto(it) }
+
+    fun getCustomers() : List<CustomerDto> =
+        customerRepository.findAll().map { entityToDto(it) }
 
     @Transactional
     fun createProduct(productCreateDto: ProductCreateDto): ProductDto {
@@ -127,6 +141,38 @@ class EntityService(
         orderRepository.deleteById(id)
     }
 
+    @Transactional
+    fun deleteOrderItem(id: Long) {
+        if (!orderItemRepository.existsById(id)) {
+            throw RuntimeException("Товар заказа с id $id не найден")
+        }
+        orderItemRepository.deleteById(id)
+    }
+
+    @Transactional
+    fun deleteReview(id: Long) {
+        if (!reviewRepository.existsById(id)) {
+            throw RuntimeException("Отзыв с id $id не найден")
+        }
+        reviewRepository.deleteById(id)
+    }
+
+    @Transactional
+    fun deleteWarehouse(id: Long) {
+        if (!warehouseRepository.existsById(id)) {
+            throw RuntimeException("Складские остатки с id $id не найден")
+        }
+        warehouseRepository.deleteById(id)
+    }
+
+    @Transactional
+    fun deleteCustomer(id: Long) {
+        if (!customerRepository.existsById(id)) {
+            throw RuntimeException("Складские остатки с id $id не найден")
+        }
+        customerRepository.deleteById(id)
+    }
+
     private fun entityToDto(seller: Seller): SellerDto {
         return SellerDto(
             sellerId = seller.sellerId,
@@ -167,6 +213,51 @@ class EntityService(
             categoryId = category.categoryId,
             categoryName = category.categoryName,
             parentCategoryId = category.parentCategory?.categoryId
+        )
+    }
+
+    private fun entityToDto(orderItem: OrderItem): OrderItemDto {
+        return OrderItemDto(
+            orderId = orderItem.orderItemId,
+            productId = orderItem.product.productId,
+            unitPrice = orderItem.unitPrice,
+            quantity = orderItem.quantity,
+            orderItemId = orderItem.orderItemId
+        )
+    }
+    private fun entityToDto(review: Review): ReviewDto {
+        return ReviewDto(
+            reviewId = review.reviewId,
+            productId = review.product.productId,
+            customerId = review.customer.customerId,
+            reviewDate = review.reviewDate,
+            commentText = review.commentText,
+            rating = review.rating,
+            isPublished = review.isPublished,
+        )
+    }
+
+    private fun entityToDto(warehouse: Warehouse): WarehouseDto {
+        return WarehouseDto(
+            productId = warehouse.product.productId,
+            quantityInStock = warehouse.quantityInStock,
+            lastRestockDate = warehouse.lastRestockDate,
+            warehouseId = warehouse.warehouseId
+        )
+    }
+
+    private fun entityToDto(customer: Customer): CustomerDto {
+        return CustomerDto(
+            customerId = customer.customerId,
+            registrationDate = customer.registrationDate,
+            address = customer.address,
+            isActive = customer.isActive,
+            email = customer.email,
+            firstName = customer.firstName,
+            phoneNumber = customer.phoneNumber,
+            postalCode = customer.postalCode,
+            city = customer.city,
+            lastName = customer.lastName,
         )
     }
 }

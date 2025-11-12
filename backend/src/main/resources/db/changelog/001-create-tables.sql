@@ -89,7 +89,8 @@ CREATE TABLE reviews
 -- 8. Склад
 CREATE TABLE warehouse
 (
-    product_id        BIGINT PRIMARY KEY,
+    warehouse_id      BIGSERIAL PRIMARY KEY,
+    product_id        BIGINT    NOT NULL,
     quantity_in_stock INT NOT NULL CHECK (quantity_in_stock >= 0),
     last_restock_date TIMESTAMP NULL,
     FOREIGN KEY (product_id) REFERENCES products (product_id) ON DELETE CASCADE

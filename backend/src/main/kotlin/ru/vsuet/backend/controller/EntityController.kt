@@ -29,6 +29,18 @@ class EntityController(
         return mapOf("message" to "Продавец успешно удален")
     }
 
+    @GetMapping("/order-items")
+    fun getOrderItems(): List<OrderItemDto> = entityService.getOrderItems()
+
+    @GetMapping("/reviews")
+    fun getReviews(): List<ReviewDto> = entityService.getReviews()
+
+    @GetMapping("/warehouses")
+    fun getWarehouses(): List<WarehouseDto> = entityService.getWarehouses()
+
+    @GetMapping("/customers")
+    fun getCustomers(): List<CustomerDto> = entityService.getCustomers()
+
     @GetMapping("/categories")
     fun getAllCategories(): List<CategoryDto> = entityService.getAllCategories()
 
@@ -55,5 +67,29 @@ class EntityController(
     fun deleteOrder(@PathVariable id: Long): Map<String, String> {
         entityService.deleteOrder(id)
         return mapOf("message" to "Заказ успешно удален")
+    }
+
+    @DeleteMapping("/order-item/{id}")
+    fun deleteOrderItem(@PathVariable id: Long): Map<String, String> {
+        entityService.deleteOrderItem(id)
+        return mapOf("message" to "Товар заказа успешно удален")
+    }
+
+    @DeleteMapping("/review/{id}")
+    fun deleteReview(@PathVariable id: Long): Map<String, String> {
+        entityService.deleteReview(id)
+        return mapOf("message" to "Отзыв успешно удален")
+    }
+
+    @DeleteMapping("/warehouse/{id}")
+    fun deleteWarehouse(@PathVariable id: Long): Map<String, String> {
+        entityService.deleteWarehouse(id)
+        return mapOf("message" to "Складские остатки успешно удалены")
+    }
+
+    @DeleteMapping("/customer/{id}")
+    fun deleteCustomer(@PathVariable id: Long): Map<String, String> {
+        entityService.deleteCustomer(id)
+        return mapOf("message" to "Клиент успешно удален")
     }
 }
