@@ -7,6 +7,8 @@ CREATE TABLE sellers
     contact_phone            VARCHAR(20),
     tax_identification_number VARCHAR(20)  NOT NULL UNIQUE,
     registration_date        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     is_active                BOOLEAN      NOT NULL DEFAULT TRUE
 );
 
@@ -19,6 +21,8 @@ CREATE TABLE customers
     email             VARCHAR(100) NOT NULL UNIQUE,
     phone_number      VARCHAR(20),
     registration_date TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     address           VARCHAR(500),
     city              VARCHAR(100),
     postal_code       VARCHAR(20),
@@ -31,6 +35,9 @@ CREATE TABLE categories
     category_id        BIGSERIAL PRIMARY KEY,
     category_name      VARCHAR(100) NOT NULL,
     parent_category_id BIGINT NULL,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
     FOREIGN KEY (parent_category_id) REFERENCES categories (category_id)
 );
 
@@ -44,6 +51,8 @@ CREATE TABLE products
     description   TEXT,
     price         DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
     created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+
     FOREIGN KEY (seller_id) REFERENCES sellers (seller_id),
     FOREIGN KEY (category_id) REFERENCES categories (category_id)
 );
@@ -56,7 +65,11 @@ CREATE TABLE orders
     order_date        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status            VARCHAR(50)    NOT NULL DEFAULT 'Оформлен',
     total_amount      DECIMAL(10, 2) NOT NULL CHECK (total_amount >= 0),
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     shipping_address  VARCHAR(500)   NOT NULL,
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+
     FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
 );
 
@@ -67,7 +80,11 @@ CREATE TABLE order_items
     order_id      BIGINT         NOT NULL,
     product_id    BIGINT         NOT NULL,
     quantity      INT            NOT NULL CHECK (quantity > 0),
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     unit_price    DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+
     FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products (product_id)
 );
@@ -82,6 +99,10 @@ CREATE TABLE reviews
     comment_text  TEXT,
     review_date   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_published  BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+
     FOREIGN KEY (product_id) REFERENCES products (product_id),
     FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
 );
@@ -93,6 +114,10 @@ CREATE TABLE warehouse
     product_id        BIGINT    NOT NULL,
     quantity_in_stock INT NOT NULL CHECK (quantity_in_stock >= 0),
     last_restock_date TIMESTAMP NULL,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+
     FOREIGN KEY (product_id) REFERENCES products (product_id) ON DELETE CASCADE
 );
 

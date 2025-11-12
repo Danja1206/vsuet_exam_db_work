@@ -2,6 +2,7 @@ package ru.vsuet.backend.model
 
 import jakarta.persistence.*
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "order_items")
@@ -19,5 +20,13 @@ data class OrderItem(
     val product: Product,
 
     val quantity: Int,
+    @Column(name = "is_active")
+
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
     val unitPrice: BigDecimal
+
 )

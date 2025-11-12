@@ -19,6 +19,14 @@ data class Order(
     val status: String = "Оформлен",
     val totalAmount: BigDecimal,
     val shippingAddress: String,
+    @Column(name = "is_active")
+
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
+
 
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
     val items: MutableList<OrderItem> = mutableListOf()

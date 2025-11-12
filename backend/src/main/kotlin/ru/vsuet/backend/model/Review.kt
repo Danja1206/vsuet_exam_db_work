@@ -23,6 +23,14 @@ data class Review(
     val commentText: String? = null,
     val reviewDate: LocalDateTime = LocalDateTime.now(),
     val isPublished: Boolean = true,
+    @Column(name = "is_active")
+
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
+
 
 ) {
     init {

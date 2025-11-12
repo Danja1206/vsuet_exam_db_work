@@ -16,5 +16,12 @@ data class Warehouse(
 
     val quantityInStock: Int,
     val lastRestockDate: LocalDateTime? = null,
+    @Column(name = "is_active")
+
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
 
 )

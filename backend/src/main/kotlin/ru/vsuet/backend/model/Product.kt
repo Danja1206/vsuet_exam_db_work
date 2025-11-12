@@ -23,5 +23,9 @@ data class Product(
     val description: String? = null,
     val price: BigDecimal,
 
+    @Column(name = "is_active")
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
     val createdAt: LocalDateTime? = null,
 )

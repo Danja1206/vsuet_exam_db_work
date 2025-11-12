@@ -17,5 +17,9 @@ data class Seller(
     val taxIdentificationNumber: String,
     val registrationDate: LocalDateTime = LocalDateTime.now(),
     @Column(name = "is_active")
-    val isActive: Boolean = true,
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
 )

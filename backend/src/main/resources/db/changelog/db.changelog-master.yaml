@@ -18,3 +18,12 @@ databaseChangeLog:
             encoding: utf8
             splitStatements: true
             stripComments: true
+  - changeSet:
+      id: 003-add-cascade-delete
+      author: marketplace
+      changes:
+        - sqlFile:
+            path: db/changelog/003-add-cascade-delete.sql
+            encoding: utf8
+            splitStatements: true
+            stripComments: true

@@ -18,5 +18,11 @@ data class Customer(
     val address: String? = null,
     val city: String? = null,
     val postalCode: String? = null,
-    val isActive: Boolean = true
+    @Column(name = "is_active")
+
+    var isActive: Boolean = true,
+    @Column(name = "created_at")
+
+    val createdAt: LocalDateTime? = null,
+
 )
