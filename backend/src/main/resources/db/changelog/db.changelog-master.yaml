@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-tables
+      author: marketplace
+      changes:
+        - sqlFile:
+            path: db/changelog/001-create-tables.sql
+            encoding: utf8
+            splitStatements: true
+            stripComments: true
+
+  - changeSet:
+      id: 002-insert-data
+      author: marketplace
+      changes:
+        - sqlFile:
+            path: db/changelog/002-insert-data.sql
+            encoding: utf8
+            splitStatements: true
+            stripComments: true
