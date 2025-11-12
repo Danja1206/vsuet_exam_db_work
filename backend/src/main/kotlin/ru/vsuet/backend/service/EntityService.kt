@@ -64,23 +64,23 @@ class EntityService(
     }
 
     fun getAllProducts(): List<ProductDto> {
-        return productRepository.findAll().map { entityToDto(it) }
+        return productRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
     }
 
     fun getAllCategories(): List<CategoryDto> =
-        categoryRepository.findAll().map { entityToDto(it) }
+        categoryRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
 
     fun getOrderItems() : List<OrderItemDto> =
-        orderItemRepository.findAll().map { entityToDto(it) }
+        orderItemRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
 
     fun getReviews() : List<ReviewDto> =
-        reviewRepository.findAll().map { entityToDto(it) }
+        reviewRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
 
     fun getWarehouses() : List<WarehouseDto> =
-        warehouseRepository.findAll().map { entityToDto(it) }
+        warehouseRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
 
     fun getCustomers() : List<CustomerDto> =
-        customerRepository.findAll().map { entityToDto(it) }
+        customerRepository.findAll().filter { it.isActive }.map { entityToDto(it) }
 
     @Transactional
     fun createProduct(productCreateDto: ProductCreateDto): ProductDto {
