@@ -43,7 +43,7 @@ CREATE TABLE products
     product_name  VARCHAR(255)   NOT NULL,
     description   TEXT,
     price         DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    created_date  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (seller_id) REFERENCES sellers (seller_id),
     FOREIGN KEY (category_id) REFERENCES categories (category_id)
 );

@@ -13,7 +13,8 @@ class EntityService(
     private val productRepository: ProductRepository,
     private val orderRepository: OrderRepository,
     private val customerRepository: CustomerRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val orderItemRepository: OrderItemRepository
 ) {
 
     fun getAllSellers(): List<SellerDto> {

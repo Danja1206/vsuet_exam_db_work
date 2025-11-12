@@ -22,4 +22,6 @@ data class Product(
     val productName: String,
     val description: String? = null,
     val price: BigDecimal,
+
+    val createdAt: LocalDateTime? = null,
 )
