@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" monitorInterval="10" packages="ru.innotech.test.util.logger">
+    <Appenders>
+        <Socket name="Socket" host="${env:FLUENT_BIT_HOST}" port="5170" reconnectionDelayMillis="5000">
+            <JsonTemplateLayout eventTemplateUri="classpath:LoggerTemplateLayout.json" locationInfoEnabled="true" maxStringLength="1048576"/>
+        </Socket>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+                           charset="UTF-8" />
+        </Console>
+
+        <Async name="Async_Socket">
+            <AppenderRef ref="Socket" />
+                <blocking>false</blocking>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Async_Socket"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

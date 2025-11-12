@@ -1,0 +1,32 @@
+{
+  "@version": 1,
+  "message": {
+    "$resolver": "message",
+    "stringified": true,
+    "fallbackKey": "formattedMessage"
+  },
+  "timestamp": {
+    "$resolver": "timestamp",
+    "pattern": {
+      "pattern": "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+      "timeZone": "UTC"
+    }
+  },
+  "level": {
+    "$resolver": "level",
+    "field": "severity"
+  },
+  "thread": {
+    "$resolver": "thread",
+    "field": "thread"
+  },
+  "logger": {
+    "$resolver": "logger",
+    "field": "logger"
+  },
+  "exception": {
+    "$resolver": "exception",
+    "field": "exception"
+  },
+  "charset": "UTF-8"
+}
