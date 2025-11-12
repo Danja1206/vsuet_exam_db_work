@@ -87,66 +87,52 @@ class BackupService(
     }
 
     fun archiveOldData(archiveRequest: ArchiveRequest): String {
-// Проверяем существование исходной таблицы
         if (!tableExists(archiveRequest.sourceTableName)) {
             throw IllegalArgumentException("Таблица ${archiveRequest.sourceTableName} не существует")
         }
 
-
-// Получаем структуру исходной таблицы (column -> data_type)
         val tableColumns = getTableColumns(archiveRequest.sourceTableName)
-        if (tableColumns.isEmpty()) {
-            throw RuntimeException("Не удалось получить структуру таблицы ${archiveRequest.sourceTableName}")
+        if (!tableColumns.containsKey("created_at")) {
+            throw IllegalArgumentException("В таблице ${archiveRequest.sourceTableName} нет поля created_at — архивация невозможна")
         }
 
-
-// Определяем колонку для фильтрации по дате автоматически
-        val dateColumn = getDateColumnForTable(tableColumns)
-
-
-// Создаем SQL для создания архивной таблицы
         val createArchiveTable = buildCreateArchiveTableSql(archiveRequest, tableColumns)
+        val archiveSql = buildArchiveDataSql(archiveRequest, tableColumns)
+        val deleteSql = buildDeleteOldDataSql(archiveRequest)
 
-
-// Определяем SQL для переноса и удаления данных, используя найденную dateColumn
-        val archiveSql = buildArchiveDataSql(archiveRequest, tableColumns, dateColumn)
-        val deleteSql = buildDeleteOldDataSql(archiveRequest, dateColumn)
-
-
-// Выполняем SQL команды
         runSqlInDocker(createArchiveTable)
-        val archivedCount = countArchivableRecords(archiveRequest, dateColumn)
+
+        val archivedCount = countArchivableRecords(archiveRequest)
+        if (archivedCount == 0) return "Нет данных старше ${archiveRequest.olderThanDays} дней для архивации"
+
         runSqlInDocker(archiveSql)
         runSqlInDocker(deleteSql)
 
+        val viewSql = """
+        CREATE OR REPLACE VIEW ${archiveRequest.sourceTableName}_with_archive AS
+        SELECT * FROM ${archiveRequest.sourceTableName}
+        UNION ALL
+        SELECT * FROM ${archiveRequest.archiveTableName};
+    """.trimIndent()
 
-        return "Архивация $archivedCount записей из ${archiveRequest.sourceTableName} в ${archiveRequest.archiveTableName} завершена"
+        runSqlInDocker(viewSql)
+
+        return "Архивация $archivedCount записей из ${archiveRequest.sourceTableName} завершена (по created_at)"
     }
 
     private fun getDateColumnForTable(columns: Map<String, String>): String {
-// Популярные имена колонок с датой/временем
         val preferredNames = listOf(
-            "order_date",
             "created_at",
-            "created_on",
-            "created",
-            "createdate",
-            "registration_date",
-            "updated_at",
-            "date",
-            "timestamp"
         )
         val lowerKeys = columns.keys.map { it.lowercase() }
 
 
-// 1) Поиск по имени
         for (name in preferredNames) {
             val idx = lowerKeys.indexOf(name)
             if (idx >= 0) return columns.keys.elementAt(idx)
         }
 
 
-// 2) Поиск по типу колонки (timestamp/date)
         val byType = columns.entries.firstOrNull { entry ->
             val t = entry.value.lowercase()
             t.contains("timestamp") || t.contains("date") || t.contains("time")
@@ -215,53 +201,46 @@ class BackupService(
             }
         }.toMutableList()
 
-
         archiveColumns.add("archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         archiveColumns.add("archived_by VARCHAR(100) DEFAULT 'system'")
 
-
         return """
 CREATE TABLE IF NOT EXISTS ${archiveRequest.archiveTableName} (
-archive_id BIGSERIAL PRIMARY KEY,
-${archiveColumns.joinToString(",\n ")}
+    archive_id BIGSERIAL PRIMARY KEY,
+    ${archiveColumns.joinToString(",\n    ")}
 );
 """.trimIndent()
     }
 
 
-    private fun buildArchiveDataSql(
-        archiveRequest: ArchiveRequest,
-        columns: Map<String, String>,
-        dateColumn: String
-    ): String {
+    private fun buildArchiveDataSql(archiveRequest: ArchiveRequest, columns: Map<String, String>): String {
         val columnNames = columns.keys.joinToString(", ")
         val archiveColumnNames = columns.keys.map {
             if (it.lowercase() == "id") "id_original" else it
         }.joinToString(", ")
 
-
         return """
 INSERT INTO ${archiveRequest.archiveTableName} ($archiveColumnNames, archived_at, archived_by)
 SELECT $columnNames, CURRENT_TIMESTAMP, 'system'
 FROM ${archiveRequest.sourceTableName}
-WHERE "$dateColumn" < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
+WHERE created_at < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
 """.trimIndent()
     }
 
 
-    private fun buildDeleteOldDataSql(archiveRequest: ArchiveRequest, dateColumn: String): String {
+    private fun buildDeleteOldDataSql(archiveRequest: ArchiveRequest): String {
         return """
 DELETE FROM ${archiveRequest.sourceTableName}
-WHERE "$dateColumn" < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
+WHERE created_at < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
 """.trimIndent()
     }
 
 
-    private fun countArchivableRecords(archiveRequest: ArchiveRequest, dateColumn: String): Int {
+    private fun countArchivableRecords(archiveRequest: ArchiveRequest): Int {
         val sql = """
 SELECT COUNT(*)
 FROM ${archiveRequest.sourceTableName}
-WHERE "$dateColumn" < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
+WHERE created_at < NOW() - INTERVAL '${archiveRequest.olderThanDays} days';
 """.trimIndent()
 
 
