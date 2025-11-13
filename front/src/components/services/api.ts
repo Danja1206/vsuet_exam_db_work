@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { QueryRequest, ExportRequest, BackupRequest, ArchiveRequest } from '../../types';
-const API_BASE_URL = 'http://localhost:8032/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_SERVICE = import.meta.env.VITE_API_URL_SERVICE;
+const API_DATA = import.meta.env.VITE_API_URL_DATA;
 
 export const entityApi = {
     getSellers: async () => {
@@ -152,13 +154,13 @@ export const entityApi = {
 
 export const dataApi = {
     getTableColumns: async (tableName) => {
-        const response = await fetch(`${API_BASE_URL}/data/columns/${tableName}`);
+        const response = await fetch(`${API_DATA}/data/columns/${tableName}`);
         if (!response.ok) throw new Error('Failed to fetch table columns');
         return response.json();
     },
 
     executeQuery: async (queryRequest) => {
-        const response = await fetch(`${API_BASE_URL}/data/query`, {
+        const response = await fetch(`${API_DATA}/data/query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(queryRequest)
@@ -169,7 +171,7 @@ export const dataApi = {
 
 
     executeSQL: async (request: { query: string }) => {
-        const response = await fetch(`${API_BASE_URL}/data/sql-command`, {
+        const response = await fetch(`${API_DATA}/data/sql-command`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -195,7 +197,7 @@ export const dataApi = {
     },
 
     exportData: async (exportRequest) => {
-        const response = await fetch(`${API_BASE_URL}/data/export-sql`, {
+        const response = await fetch(`${API_DATA}/data/export-sql`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(exportRequest)
@@ -212,14 +214,14 @@ export const dataApi = {
 
 export const serviceApi = {
     getBackupFiles: async () => {
-        const response = await fetch(`${API_BASE_URL}/service/backups`);
+        const response = await fetch(`${API_SERVICE}/service/backups`);
         if (!response.ok) throw new Error('Failed to load backup files');
         console.log(response)
         return response.json();
     },
 
     createBackup: async (backupRequest) => {
-        const response = await fetch(`${API_BASE_URL}/service/backup`, {
+        const response = await fetch(`${API_SERVICE}/service/backup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(backupRequest)
@@ -234,14 +236,14 @@ export const serviceApi = {
     },
 
     getTables: async (): Promise<string[]> => {
-        const response = await fetch(`${API_BASE_URL}/service/tables`);
+        const response = await fetch(`${API_SERVICE}/service/tables`);
         if (!response.ok) throw new Error('Failed to load tables');
         return response.json();
     },
 
 
     restoreBackup: async (backupFile: string) => {
-        const response = await fetch(`${API_BASE_URL}/service/restore`, {
+        const response = await fetch(`${API_SERVICE}/service/restore`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ backupFile })  // <- здесь ключ должен совпадать
@@ -251,7 +253,7 @@ export const serviceApi = {
     },
 
     archiveData: async (archiveRequest) => {
-        const response = await fetch(`${API_BASE_URL}/service/archive`, {
+        const response = await fetch(`${API_SERVICE}/service/archive`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(archiveRequest)
