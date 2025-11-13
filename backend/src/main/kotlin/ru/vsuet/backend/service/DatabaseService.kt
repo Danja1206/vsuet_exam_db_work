@@ -282,6 +282,8 @@ class DatabaseService(
         val data = executeQuery(queryRequest)
         val out = ByteArrayOutputStream()
 
+
+        out.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
         if (data.isNotEmpty()) {
             val headers = data[0].keys.toList()
             val writer = out.bufferedWriter(Charsets.UTF_8)
