@@ -122,6 +122,13 @@ docker-compose down -v
 
 - Port: `5432`
 
+- Maintenance database: `postgres`
+
 - Username: `postgres`
 
 - Password: `root`
+
+5.  Кнопка Save
+6.  После того как сервер добавился: 
+- Раскрываем по цепочке **"Servers"** → **<Имя_добавленного_сервера>** → **<Имя БД (в нашем случае postgres)** → **Schemas** → **Tables**
+7. Если в **Tables** есть таблицы, значит все прошло успешно!
