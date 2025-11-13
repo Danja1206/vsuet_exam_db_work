@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-16
+    hostname: postgres-16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backup:/backup
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - postgres-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - postgres-network
+    depends_on:
+      - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spring-backend
+    restart: unless-stopped
+    environment:
+      - DB_URL=postgres-16:5432
+      - DB_NAME=postgres
+      - DB_SCHEMA=public
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=root
+      - CONTAINER_NAME=postgres-16
+      - SERVER_PORT=8080
+    ports:
+      - "8089:8080"
+    depends_on:
+      - postgres
+    networks:
+      - postgres-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: "1000:999" 
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: vite-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8089/api
+      - VITE_API_URL_SERVICE=http://localhost:8089/api
+      - VITE_API_URL_DATA=http://localhost:8089/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - postgres-network
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_backup:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  postgres-network:
+    driver: bridge
