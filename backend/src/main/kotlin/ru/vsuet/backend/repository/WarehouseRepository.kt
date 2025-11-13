@@ -5,4 +5,5 @@ import ru.vsuet.backend.model.Product
 import ru.vsuet.backend.model.Warehouse
 
 interface WarehouseRepository : JpaRepository<Warehouse, Long> {
+    fun findByproductProductId(id: Long): List<Warehouse>
 }

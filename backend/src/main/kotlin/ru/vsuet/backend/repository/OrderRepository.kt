@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository
 import ru.vsuet.backend.model.Order
 
 @Repository
-interface OrderRepository : JpaRepository<Order, Long>
+interface OrderRepository : JpaRepository<Order, Long> {
+    fun findByCustomerCustomerId(customerId: Long): List<Order>
+}
