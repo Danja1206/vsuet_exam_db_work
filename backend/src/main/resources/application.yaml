@@ -1,12 +1,12 @@
 server:
-  port: 8032
+  port: ${SERVER_PORT}
 
 spring:
   datasource:
 #    url: jdbc:postgresql://localhost:5431/marketplace?currentSchema=public
-    url: jdbc:postgresql://localhost:5431/postgres?currentSchema=public
-    username: postgres
-    password: root
+    url: jdbc:postgresql://${DB_URL}/${DB_NAME}?currentSchema=${DB_SCHEMA}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -32,10 +32,10 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: public
+    default-schema: ${DB_SCHEMA}
 
 app:
   postgres:
-    container-name: postgres-16
+    container-name: ${CONTAINER_NAME:postgres-16}
   backup:
-    path: /backup/
+    path: /app/backups/
