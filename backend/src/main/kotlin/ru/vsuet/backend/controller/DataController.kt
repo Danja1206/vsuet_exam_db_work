@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import ru.vsuet.backend.model.dto.QueryRequest
 import ru.vsuet.backend.model.dto.QueryResultResponse
+import ru.vsuet.backend.model.dto.SQLExportRequest
 import ru.vsuet.backend.model.dto.SQLQueryRequest
 import ru.vsuet.backend.service.DatabaseService
 
@@ -32,6 +33,41 @@ class DataController(
                 error = "Ошибка выполнения SQL-запроса: ${e.message ?: "Произошла неизвестная ошибка"}"
             )
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+        }
+    }
+
+    @PostMapping("/export-sql")
+    fun exportSqlData(@RequestBody request: SQLExportRequest): ResponseEntity<ByteArray> {
+        return try {
+            val format = request.format.lowercase()
+            val bytes: ByteArray
+            val filename: String
+            val contentType: String
+
+            when (format) {
+                "xlsx" -> {
+                    bytes = databaseService.exportSqlToExcel(request.query)
+                    filename = "export_${System.currentTimeMillis()}.xlsx"
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+                "csv" -> {
+                    bytes = databaseService.exportSqlToCsv(request.query)
+                    filename = "export_${System.currentTimeMillis()}.csv"
+                    contentType = "text/csv; charset=utf-8"
+                }
+                else -> throw IllegalArgumentException("Неподдерживаемый формат: $format")
+            }
+
+            ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=$filename")
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .header("Content-Encoding", "UTF-8")
+                .body(bytes)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body("Ошибка валидации: ${e.message}".toByteArray())
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Ошибка экспорта: ${e.message ?: "Неизвестная ошибка"}".toByteArray())
         }
     }
 

@@ -381,4 +381,125 @@ class DatabaseService(
         n = n.split("_").joinToString("") { it.replaceFirstChar(Char::uppercase) }
         return n.replaceFirstChar(Char::uppercase)
     }
+
+    fun exportSqlToExcel(sql: String): ByteArray {
+        val data = executeSQLQueryRaw(sql)
+        return createExcelFile(data)
+    }
+
+    fun exportSqlToCsv(sql: String): ByteArray {
+        val data = executeSQLQueryRaw(sql)
+        return createCsvFile(data)
+    }
+
+    private fun executeSQLQueryRaw(sql: String): List<Map<String, Any?>> {
+        validateSQLQuery(sql)
+        return jdbcTemplate.query(sql) { rs, _ ->
+            extractRowRaw(rs)
+        }
+    }
+
+    private fun extractRowRaw(rs: ResultSet): Map<String, Any?> {
+        val metaData = rs.metaData
+        val columnCount = metaData.columnCount
+        val row = mutableMapOf<String, Any?>()
+
+        for (i in 1..columnCount) {
+            val columnName = metaData.getColumnLabel(i)
+            val value = safeGetObject(rs, i)
+            row[columnName] = value
+        }
+
+        return row
+    }
+
+
+    private fun safeGetObject(rs: ResultSet, columnIndex: Int): Any? {
+        return try {
+            val value = rs.getObject(columnIndex)
+            when {
+                value == null -> null
+                value is java.sql.Timestamp -> value.toLocalDateTime()
+                value is java.sql.Date -> value.toLocalDate()
+                value is java.time.LocalDateTime -> value
+                value is java.time.LocalDate -> value
+                value is Number -> value
+                value is Boolean -> value
+                else -> value.toString()
+            }
+        } catch (e: SQLException) {
+            "ERROR: ${e.message}"
+        }
+    }
+
+    private fun createExcelFile(data: List<Map<String, Any?>>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("Export Data")
+
+        if (data.isNotEmpty()) {
+            val headers = data[0].keys.toList()
+            val headerRow = sheet.createRow(0)
+
+            headers.forEachIndexed { i, header ->
+                headerRow.createCell(i).setCellValue(header)
+            }
+
+            data.forEachIndexed { rowIndex, row ->
+                val excelRow = sheet.createRow(rowIndex + 1)
+                headers.forEachIndexed { colIndex, header ->
+                    val cell = excelRow.createCell(colIndex)
+                    val value = row[header]
+
+                    when (value) {
+                        null -> cell.setCellValue("")
+                        is Number -> cell.setCellValue(value.toDouble())
+                        is Boolean -> cell.setCellValue(value)
+                        is java.time.LocalDateTime -> cell.setCellValue(value.toString())
+                        is java.time.LocalDate -> cell.setCellValue(value.toString())
+                        else -> cell.setCellValue(value.toString())
+                    }
+                }
+            }
+
+            headers.indices.forEach { sheet.autoSizeColumn(it) }
+        }
+
+        ByteArrayOutputStream().use { out ->
+            workbook.use { it.write(out) }
+            return out.toByteArray()
+        }
+    }
+
+    private fun createCsvFile(data: List<Map<String, Any?>>): ByteArray {
+        val out = ByteArrayOutputStream()
+
+        out.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+        if (data.isNotEmpty()) {
+            val headers = data[0].keys.toList()
+            val writer = out.bufferedWriter(Charsets.UTF_8)
+
+            // Записываем заголовки
+            writer.appendLine(headers.joinToString(",") { escapeCsvValue(it) })
+
+            // Записываем данные
+            data.forEach { row ->
+                val line = headers.joinToString(",") { header ->
+                    escapeCsvValue(row[header]?.toString() ?: "")
+                }
+                writer.appendLine(line)
+            }
+
+            writer.flush()
+        }
+
+        return out.toByteArray()
+    }
+
+    private fun escapeCsvValue(value: String): String {
+        return if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            "\"" + value.replace("\"", "\"\"") + "\""
+        } else {
+            value
+        }
+    }
 }
