@@ -109,7 +109,7 @@ docker-compose down -v
 - Email: `admin@example.com`
 
 - Пароль: `admin`
-## Настройка подключения в PGAdmin
+### Настройка подключения в PGAdmin
 1.  Правый клик на **"Servers"** → **Register** → **Server**
 
 2.  Во вкладке **General**:
