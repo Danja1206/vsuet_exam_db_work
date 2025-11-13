@@ -209,7 +209,22 @@ export const dataApi = {
         }
 
         return await response.blob();
-    }
+    },
+
+    exportDatabase: async (exportRequest) => {
+        const response = await fetch(`${API_DATA}/data/export`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(exportRequest)
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Export failed: ${errText}`);
+        }
+
+        return await response.blob();
+    },
 };
 
 export const serviceApi = {

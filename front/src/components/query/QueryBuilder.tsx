@@ -41,6 +41,21 @@ interface Filter {
     value: any;
 }
 
+// Типы для запросов
+interface QueryRequest {
+    tableName: string;
+    filters: Record<string, any>;
+    columns: string[];
+    sortBy?: string;
+    sortDirection: string;
+    format?: string;
+}
+
+interface SQLRequest {
+    query: string;
+    format?: string;
+}
+
 export const QueryBuilder: React.FC = () => {
     const [form] = Form.useForm();
     const [activeTab, setActiveTab] = useState('builder');
@@ -134,13 +149,14 @@ export const QueryBuilder: React.FC = () => {
         const startTime = performance.now();
         setLoading(true);
         try {
-            const request = {
+            const request: QueryRequest = {
                 tableName: values.tableName,
                 filters: buildFilters(filters),
                 columns: values.columns || [],
                 sortBy: values.sortBy,
                 sortDirection: values.sortDirection || 'ASC'
             };
+
             const response = await dataApi.executeQuery(request);
             setData(response);
 
@@ -174,7 +190,8 @@ export const QueryBuilder: React.FC = () => {
         const startTime = performance.now();
         setSqlLoading(true);
         try {
-            const response = await dataApi.executeSQL({ query: sqlQuery });
+            const request: SQLRequest = { query: sqlQuery };
+            const response = await dataApi.executeSQL(request);
 
             // Проверяем успешность запроса
             if (!response.success) {
@@ -222,17 +239,29 @@ export const QueryBuilder: React.FC = () => {
     const onExport = async (format: 'excel' | 'csv', isSql = false) => {
         const startTime = performance.now();
         try {
-            const request = {
-                query: isSql ? sqlQuery : undefined,
-                tableName: !isSql ? form.getFieldValue('tableName') : undefined,
-                filters: !isSql ? buildFilters(filters) : undefined,
-                columns: !isSql ? form.getFieldValue('columns') || [] : undefined,
-                sortBy: !isSql ? form.getFieldValue('sortBy') : undefined,
-                sortDirection: !isSql ? form.getFieldValue('sortDirection') || 'ASC' : undefined,
-                format: format === 'excel' ? 'xlsx' : 'csv'
-            };
+            let request: QueryRequest | SQLRequest;
+            let blob: Blob;
 
-            const blob = await dataApi.exportData(request);
+            if (isSql) {
+                // Для SQL редактора - используем exportData
+                request = {
+                    query: sqlQuery,
+                    format: format === 'excel' ? 'xlsx' : 'csv'
+                } as SQLRequest;
+                blob = await dataApi.exportData(request); // exportData для SQL
+            } else {
+                // Для конструктора запросов - используем exportDatabase
+                request = {
+                    tableName: form.getFieldValue('tableName'),
+                    filters: buildFilters(filters),
+                    columns: form.getFieldValue('columns') || [],
+                    sortBy: form.getFieldValue('sortBy'),
+                    sortDirection: form.getFieldValue('sortDirection') || 'ASC',
+                    format: format === 'excel' ? 'xlsx' : 'csv'
+                } as QueryRequest;
+                blob = await dataApi.exportDatabase(request); // exportDatabase для конструктора
+            }
+
             const duration = ((performance.now() - startTime) / 1000).toFixed(2);
 
             const fileExtension = format === 'excel' ? 'xlsx' : 'csv';
@@ -282,8 +311,6 @@ export const QueryBuilder: React.FC = () => {
                         description={
                             <div>
                                 <p>При использовании фильтрации <strong>могут не работать</strong> некоторые варианты(особенно <strong>'Содержит'(LIKE))</strong> поэтому такие запросы лучше через <strong>SQL Редактор</strong>.</p>
-
-                                {/*<p><Text strong type="danger">Внимание:</Text> Операция необратима. Убедитесь в наличии резервной копии перед архивацией.</p>*/}
                             </div>
                         }
                         type="warning"
@@ -408,8 +435,6 @@ export const QueryBuilder: React.FC = () => {
 
                                 <p>2. Подсказки отображают <strong>только синтаксис</strong> языка SQL, названия таблиц и полей в БД
                                     нужно <strong>писать вручную</strong>.</p>
-
-                                {/*<p><Text strong type="danger">Внимание:</Text> Операция необратима. Убедитесь в наличии резервной копии перед архивацией.</p>*/}
                             </div>
                         }
                         type="warning"
@@ -421,7 +446,6 @@ export const QueryBuilder: React.FC = () => {
                             value={sqlQuery}
                             height="400px"
                             extensions={[sql()]}
-                            // theme={oneLight}
                             onChange={setSqlQuery}
                             options={{ lineNumbers: true }}
                             placeholder="Введите SQL-запрос здесь..."
