@@ -51,7 +51,7 @@ class EntityController(
     fun createProduct(@RequestBody product: ProductCreateDto): ProductDto = entityService.createProduct(product)
 
     @PutMapping("/products/{id}")
-    fun updateProduct(@PathVariable id: Long, @RequestBody product: Product): Product =
+    fun updateProduct(@PathVariable id: Long, @RequestBody product: UpdateProductDto): ProductDto =
         entityService.updateProduct(id, product)
 
     @DeleteMapping("/products/{id}")

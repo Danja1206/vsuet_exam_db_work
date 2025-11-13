@@ -102,23 +102,23 @@ class EntityService(
     }
 
     @Transactional
-    fun updateProduct(id: Long, product: Product): Product {
+    fun updateProduct(id: Long, product: UpdateProductDto): ProductDto {
         val existingProduct = productRepository.findById(id)
             .orElseThrow { throw RuntimeException("Продукт с id $id не найден") }
 
-        val seller = sellerRepository.findById(product.seller.sellerId)
-            .orElseThrow { throw RuntimeException("Продавец с id ${product.seller.sellerId} не найден") }
+        val seller = sellerRepository.findById(product.sellerId)
+            .orElseThrow { throw RuntimeException("Продавец с id ${product.sellerId} не найден") }
 
-        val category = categoryRepository.findById(product.category.categoryId)
-            .orElseThrow { throw RuntimeException("Категория с id ${product.category.categoryId} не найдена") }
+        val category = categoryRepository.findById(product.categoryId)
+            .orElseThrow { throw RuntimeException("Категория с id ${product.categoryId} не найдена") }
 
-        return productRepository.save(existingProduct.copy(
+        return entityToDto(productRepository.save(existingProduct.copy(
             seller = seller,
             category = category,
             productName = product.productName,
             description = product.description,
             price = product.price
-        ))
+        )))
     }
 
     @Transactional
