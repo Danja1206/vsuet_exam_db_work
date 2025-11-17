@@ -97,7 +97,8 @@ class EntityService(
             description = productCreateDto.description,
             price = productCreateDto.price,
             seller = seller,
-            category = category
+            category = category,
+            createdAt = LocalDateTime.now()
         )
 
         return entityToDto(productRepository.save(product))
