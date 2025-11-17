@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional
 import ru.vsuet.backend.model.*
 import ru.vsuet.backend.model.dto.*
 import ru.vsuet.backend.repository.*
+import java.time.LocalDateTime
 
 @Service
 class EntityService(
@@ -29,7 +30,8 @@ class EntityService(
             contactEmail = sellerCreateDto.contactEmail,
             contactPhone = sellerCreateDto.contactPhone,
             taxIdentificationNumber = sellerCreateDto.taxIdentificationNumber,
-            isActive = sellerCreateDto.isActive
+            isActive = sellerCreateDto.isActive,
+            createdAt = LocalDateTime.now()
         )
         return entityToDto(sellerRepository.save(seller))
     }
