@@ -13,7 +13,7 @@ import {
     Typography,
     Spin,
     Divider,
-    Alert, Input
+    Alert, Input, Steps
 } from 'antd';
 import {
     SaveOutlined,
@@ -22,12 +22,15 @@ import {
     DownloadOutlined,
     DeleteOutlined,
     ClockCircleOutlined,
-    DatabaseOutlined
+    DatabaseOutlined, QuestionCircleOutlined, CheckCircleOutlined
 } from '@ant-design/icons';
 import { serviceApi } from '../services/api';
 
-const { Text, Title } = Typography;
+
+const { Text, Title, Paragraph, Link } = Typography;
 const { Option } = Select;
+
+const { Step } = Steps;
 
 interface BackupFile {
     name: string;
@@ -52,6 +55,14 @@ export const ServicePanel: React.FC = () => {
     const [archivingResult, setArchivingResult] = useState<string | null>(null);
     const [deletingBackup, setDeletingBackup] = useState<string | null>(null);
     const [archiveForm] = Form.useForm<ArchiveFormValues>();
+    const [instructionModalVisible, setInstructionModalVisible] = useState(false);
+    const showInstructionModal = () => {
+        setInstructionModalVisible(true);
+    };
+
+    const handleInstructionModalCancel = () => {
+        setInstructionModalVisible(false);
+    };
 
     useEffect(() => {
         loadBackupFiles();
@@ -213,6 +224,15 @@ export const ServicePanel: React.FC = () => {
                     }
                     bordered={false}
                     style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                    extra={ // Add instruction link to card header
+                        <Link
+                            onClick={showInstructionModal}
+                            // icon={<QuestionCircleOutlined />}
+                            style={{ fontSize: '16px' }}
+                        >
+                            Инструкция
+                        </Link>
+                    }
                 >
                     <Space direction="vertical" style={{ width: '100%' }} size="middle">
                         <Button
@@ -474,6 +494,104 @@ export const ServicePanel: React.FC = () => {
                         style={{ marginTop: '16px' }}
                     />
                 </Card>
+                <Modal
+                    title={
+                        <Space>
+                            <QuestionCircleOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+                            <span>Инструкция по резервному копированию</span>
+                        </Space>
+                    }
+                    open={instructionModalVisible}
+                    onCancel={handleInstructionModalCancel}
+                    footer={[
+                        <Button key="back" onClick={handleInstructionModalCancel}>
+                            Закрыть
+                        </Button>
+                    ]}
+                    width={800}
+                >
+                    <Steps direction="vertical" current={-1} size="small">
+                        <Step
+                            title="Создание резервной копии"
+                            description={
+                                <Paragraph>
+                                    Нажмите кнопку <Text code>Создать резервную копию</Text>.
+                                    Система автоматически создаст бэкап базы данных с текущей датой в имени файла.
+                                    Процесс может занять несколько минут в зависимости от размера базы.
+                                </Paragraph>
+                            }
+                            icon={<SaveOutlined style={{ color: '#52c41a', fontSize: '20px' }} />}
+                        />
+                        <Step
+                            title="Проверка списка бэкапов"
+                            description={
+                                <Paragraph>
+                                    После создания бэкап появится в списке доступных файлов ниже.
+                                    Здесь вы можете увидеть:
+                                    <ul>
+                                        <li>Имя файла с расширением .backup</li>
+                                        <li>Размер файла в удобочитаемом формате</li>
+                                        <li>Дата и время создания</li>
+                                    </ul>
+                                </Paragraph>
+                            }
+                            icon={<DatabaseOutlined style={{ color: '#13c2c2', fontSize: '20px' }} />}
+                        />
+                        <Step
+                            title="Выбор файла для восстановления"
+                            description={
+                                <Paragraph>
+                                    Есть два способа выбрать бэкап для восстановления:
+                                    <ol>
+                                        <li>
+                                            Нажмите кнопку <Text code>Восстановить</Text> напротив нужного файла в списке.
+                                            Это автоматически выберет файл в разделе <Text strong>"Восстановление данных"</Text>.
+                                        </li>
+                                        <li>
+                                            Перейдите в раздел <Text strong>"Восстановление данных"</Text> и выберите файл из выпадающего списка.
+                                        </li>
+                                    </ol>
+                                </Paragraph>
+                            }
+                            icon={<DownloadOutlined style={{ color: '#fa8c16', fontSize: '20px' }} />}
+                        />
+                        <Step
+                            title="Восстановление данных"
+                            description={
+                                <Paragraph>
+                                    После выбора файла:
+                                    <ul>
+                                        <li>Проверьте правильность выбранного файла в поле ввода</li>
+                                        <li>Нажмите кнопку <Text code>Восстановить</Text></li>
+                                        <li>Подтвердите действие в диалоговом окне (все текущие данные будут заменены!)</li>
+                                    </ul>
+                                    <Alert
+                                        message="Важно!"
+                                        description="Операция восстановления перезапишет все текущие данные в базе. Убедитесь, что вы выбрали правильный файл бэкапа."
+                                        type="warning"
+                                        showIcon
+                                        style={{ marginTop: '12px' }}
+                                    />
+                                </Paragraph>
+                            }
+                            icon={<ReloadOutlined style={{ color: '#f5222d', fontSize: '20px' }} />}
+                        />
+                        <Step
+                            title="Проверка результатов"
+                            description={
+                                <Paragraph>
+                                    После успешного восстановления:
+                                    <ul>
+                                        <li>Система покажет уведомление об успешном завершении</li>
+                                        <li>Рекомендуется перезагрузить приложение для применения изменений</li>
+                                        <li>Проверьте корректность данных в основных разделах приложения</li>
+                                    </ul>
+                                </Paragraph>
+                            }
+                            icon={<CheckCircleOutlined style={{ color: '#52c41a', fontSize: '20px' }} />}
+                        />
+                    </Steps>
+                </Modal>
             </Space>
         </div>
     );
